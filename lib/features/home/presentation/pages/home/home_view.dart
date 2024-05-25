@@ -7,7 +7,7 @@ class HomeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return const Scaffold(
       body: HomeViewBody(),
     );
   }
@@ -23,7 +23,7 @@ class HomeViewBody extends StatefulWidget {
 class _HomeViewBodyState extends State<HomeViewBody> {
   @override
   Widget build(BuildContext context) {
-    return GoogleMap(
+    return const GoogleMap(
         initialCameraPosition: CameraPosition(
             zoom: 12, target: LatLng(31.186070052677902, 29.93063447509182)));
   }
