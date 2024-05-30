@@ -1,5 +1,18 @@
+import 'dart:convert';
+import 'dart:developer';
+import 'package:http/http.dart' as http;
+
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:uuid/uuid.dart';
+
+import '../../../../../utils/service/maps/map_services.dart';
+import '../../../data/models/location_info/location_info.dart';
+import '../../../data/models/place_autocomplete_model/place_autocomplete_model.dart';
+import '../../../data/models/place_details_model/place_details_model.dart';
+import '../../../data/models/routes_model/routes_model.dart';
+import '../../../data/models/routes_modifiers.dart';
 
 class HomeView extends StatelessWidget {
   static const String nameRoute = "HomeView";
@@ -21,10 +34,64 @@ class HomeViewBody extends StatefulWidget {
 }
 
 class _HomeViewBodyState extends State<HomeViewBody> {
+  late MapServices mapServices;
+  late CameraPosition initalCameraPoistion;
+  late LatLng desintation;
+
+  late GoogleMapController googleMapController;
+  Set<Marker> markers = {};
+  late Uuid uuid;
+  Set<Polyline> polyLines = {};
+
+  @override
+  void initState() {
+    super.initState();
+    uuid = const Uuid();
+    mapServices = MapServices();
+    initalCameraPoistion = const CameraPosition(target: LatLng(0, 0));
+    desintation = LatLng(31.8840518, 35.4397575);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return const GoogleMap(
-        initialCameraPosition: CameraPosition(
-            zoom: 12, target: LatLng(31.186070052677902, 29.93063447509182)));
+    return Stack(
+      alignment: Alignment.bottomCenter,
+      children: [
+        GoogleMap(
+            polylines: polyLines,
+            markers: markers,
+            mapType: MapType.terrain,
+            onMapCreated: (controller) {
+              googleMapController = controller;
+              updateCurrentLocation();
+            },
+            initialCameraPosition: initalCameraPoistion),
+        ElevatedButton(
+            onPressed: () async {
+              var points =
+                  await mapServices.getRouteData(desintation: desintation);
+              mapServices.displayRoute(points,
+                  polyLines: polyLines,
+                  googleMapController: googleMapController);
+              setState(() {});
+              //       getPlaceDetails(placeId: "ChIJRaWfSWzNHBURaTNEayYEkcM");
+            },
+            child: Text("Accept")),
+      ],
+    );
+  }
+
+  void updateCurrentLocation() {
+    try {
+      mapServices.updateCurrentLocation(
+          googleMapController: googleMapController,
+          markers: markers,
+          onUpdatecurrentLocation: () {
+            setState(() {});
+          });
+    } catch (e) {}
   }
 }
+// تايجر لاند
+// [log] 31.8840518
+// [log] 35.4397575
