@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:foodie_driver_app/features/home/presentation/cubit/map_cubit.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:dio/dio.dart';
@@ -36,8 +38,6 @@ class HomeViewBody extends StatefulWidget {
 class _HomeViewBodyState extends State<HomeViewBody> {
   late MapServices mapServices;
   late CameraPosition initalCameraPoistion;
-  late LatLng desintation;
-
   late GoogleMapController googleMapController;
   Set<Marker> markers = {};
   late Uuid uuid;
@@ -49,11 +49,11 @@ class _HomeViewBodyState extends State<HomeViewBody> {
     uuid = const Uuid();
     mapServices = MapServices();
     initalCameraPoistion = const CameraPosition(target: LatLng(0, 0));
-    desintation = LatLng(31.8840518, 35.4397575);
   }
 
   @override
   Widget build(BuildContext context) {
+    MapCubit mapCubit = BlocProvider.of<MapCubit>(context);
     return Stack(
       alignment: Alignment.bottomCenter,
       children: [
@@ -63,14 +63,15 @@ class _HomeViewBodyState extends State<HomeViewBody> {
             mapType: MapType.terrain,
             onMapCreated: (controller) {
               googleMapController = controller;
-              updateCurrentLocation();
+              mapCubit.updateCurrentLocation(
+                  googleMapController: googleMapController,
+                  markers: markers,
+                  onUpdatecurrentLocation: () => setState(() {}));
             },
             initialCameraPosition: initalCameraPoistion),
         ElevatedButton(
             onPressed: () async {
-              var points =
-                  await mapServices.getRouteData(desintation: desintation);
-              mapServices.displayRoute(points,
+              mapCubit.go(
                   polyLines: polyLines,
                   googleMapController: googleMapController);
               setState(() {});
@@ -79,17 +80,6 @@ class _HomeViewBodyState extends State<HomeViewBody> {
             child: Text("Accept")),
       ],
     );
-  }
-
-  void updateCurrentLocation() {
-    try {
-      mapServices.updateCurrentLocation(
-          googleMapController: googleMapController,
-          markers: markers,
-          onUpdatecurrentLocation: () {
-            setState(() {});
-          });
-    } catch (e) {}
   }
 }
 // تايجر لاند
